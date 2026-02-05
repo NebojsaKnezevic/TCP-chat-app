@@ -2,6 +2,8 @@ import { createServer, Socket } from "net";
 
 const server = createServer();
 
+const clinets = [];
+
 server.on("connection", (socket: Socket) => {
   socket.setEncoding("utf-8");
   socket.on("data", (data) => {
