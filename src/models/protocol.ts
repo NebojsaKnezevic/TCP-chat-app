@@ -1,7 +1,7 @@
 import type { UserName } from "./user.js";
 type MessageType = "AUTH" | "CHAT" | "ERROR" | "SYSTEM";
 
-interface Message {
+export interface Message {
   type: MessageType;
   payload: string;
   timestamp: number;
