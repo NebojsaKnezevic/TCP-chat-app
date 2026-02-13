@@ -5,8 +5,8 @@ import type { AuthMessage, Message } from "../models/protocol.js";
 const client = createConnection({ port: 3099 }, () => {
   // console.log("connected to server");
   const msg: Message = {
-    type: "ERROR",
-    payload: "TEST TEST",
+    type: "AUTH",
+    payload: `{ "userName": "Nebojsa", "token": "12345677" }`,
     timestamp: Number(new Date()),
     sender: "Guest",
     to: [""],
