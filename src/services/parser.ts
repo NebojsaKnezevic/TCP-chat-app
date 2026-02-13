@@ -5,8 +5,16 @@ export const ProtocolParser = {
   serialize: (msg: Message): string => {
     return JSON.stringify(msg) + ProtocolParser.DELIMITER;
   },
-  deserialize: (data: string): string[] => {
-    //Here we split by delimiter and we ommit the last element, since it is incomplete
-    return data.split(ProtocolParser.DELIMITER).slice(0, -1);
+
+  splitFrames: (data: string): { complete: string[]; incomplete: string } => {
+    const result = data.split(ProtocolParser.DELIMITER);
+    return {
+      complete: result.slice(0, -1),
+      incomplete: result[result.length - 1] || "",
+    };
+  },
+
+  parseJSON: (raw: string): Message => {
+    return JSON.parse(raw);
   },
 };

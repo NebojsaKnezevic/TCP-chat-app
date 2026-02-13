@@ -5,7 +5,7 @@ export type UserName = string;
 
 export interface User {
   userName: UserName;
-  token?: string;
+  token: string;
   socket: Socket;
   chatRooms: ChatRoomName[];
   //   roomId?: number;
