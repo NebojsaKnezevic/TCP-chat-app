@@ -1,21 +1,26 @@
+process.removeAllListeners("warning");
+process.env.NODE_NO_WARNINGS = "1";
+
 import { createConnection } from "net";
-import { ProtocolParser } from "../services/parser.js";
-import type { AuthMessage, Message } from "../models/protocol.js";
+import { ClientService } from "../services/client-service.js";
 
-const client = createConnection({ port: 3099 }, () => {
-  // console.log("connected to server");
-  const msg: Message = {
-    type: "AUTH",
-    payload: `{ "userName": "Nebojsa", "token": "12345677" }`,
-    timestamp: Number(new Date()),
-    sender: "Guest",
-    to: [""],
-  };
-  client.write(ProtocolParser.serialize(msg));
-});
-
+const client = createConnection({ port: 3099 });
 client.setEncoding("utf-8");
 
-client.on("data", (data) => {
-  console.log("accepted: ", data);
-});
+new ClientService(client).run();
+
+// client.on("data", (data) => {
+//   const msg: Message = ProtocolParser.parseJSON(data.toString());
+//   // console.log("accepted: ", data);
+//   // rl.write(
+//   //   `${new Date(msg.timestamp).toLocaleTimeString()} ${msg.sender}: ${msg.payload} \n`,
+//   // );
+//   // if()
+// });
+
+// rl.on("line", (line: string) => {
+//   if (line.trim()) {
+//     client.write(line);
+//   }
+//   rl.prompt();
+// });

@@ -18,6 +18,8 @@ server.on("connection", (socket: Socket) => {
 
   socket.on("error", () => {
     console.log("Connection ended!");
+    //for some reason this event gets triggered when client breaks the connection...
+    service.handleDisconnect();
   });
 
   socket.on("drain", () => {

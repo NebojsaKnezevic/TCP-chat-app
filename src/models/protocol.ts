@@ -1,12 +1,13 @@
 import type { UserName } from "./user.js";
-type MessageType = "AUTH" | "CHAT" | "ERROR" | "SYSTEM";
+export type MessageType = "AUTH" | "CHAT" | "ERROR" | "SYSTEM" | "COMMAND";
 
 export interface Message {
   type: MessageType;
   payload: string;
   timestamp: number;
   sender: UserName;
-  to?: UserName[];
+  to: UserName[];
+  code?: number;
 }
 
 export interface AuthMessage extends Message {
@@ -25,5 +26,4 @@ export interface SystemMessage extends Message {
 
 export interface ErrorMessage extends Message {
   type: "ERROR";
-  code: number;
 }

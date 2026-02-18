@@ -8,10 +8,11 @@ import type {
   SystemMessage,
 } from "../models/protocol.js";
 import { ProtocolParser } from "./parser.js";
+import type { ChatRoom } from "../models/chat-room.js";
 
 export class ServerService {
   private repository: Repository;
-  private user: User | undefined;
+  private user: User;
   private accumulationBuffer: string = "";
 
   constructor(repo: Repository, socket: Socket) {
@@ -57,10 +58,6 @@ export class ServerService {
   }
 
   private router(msg: Message) {
-    console.log(
-      `[Routing] Type: ${msg.type} from ${this.user ? this.user.userName : "unknown"}`,
-    );
-
     switch (msg.type) {
       case "CHAT":
         console.log("CHAT message routed!");
@@ -69,6 +66,10 @@ export class ServerService {
         console.log("AUTH message routed!");
         this.handleAuthentication(msg as AuthMessage);
         break;
+      case "SYSTEM":
+        console.log("SYSTEM message routed!");
+        // this.handleAuthentication(msg as AuthMessage);
+        break;
       default:
         console.log("Unknown message type!");
     }
@@ -76,63 +77,104 @@ export class ServerService {
 
   private handleAuthentication(msg: AuthMessage) {
     try {
-      const payload: { userName: UserName; token: string } = JSON.parse(
-        msg.payload,
-      );
+      const payload: string[] = msg.payload.split(" ");
 
-      if (this.user) {
-        const userExists: User | undefined = this.repository.getUserByName(
-          payload.userName,
+      if (payload.length !== 3) {
+        this.systemMsg(
+          `Invalid auth command! UserName and Token must be one word. Example @AUTH JohnDoe 12345.`,
+          [],
+          400,
         );
-        if (userExists !== undefined) {
-          const response: SystemMessage = {
-            type: "SYSTEM",
-            payload: `User by the name of ${userExists.userName} already exists, pick another name!`,
-            timestamp: Date.now(),
-            sender: "SYSTEM",
-            to: [this.user.userName],
-          };
-          this.user.socket.write(ProtocolParser.serialize(response));
-          return;
-        }
+        return;
+      }
 
-        this.user.userName = payload.userName;
-        this.user.token = payload.token;
+      const [prefix, userName, token] = payload;
+      if (!userName) {
+        this.errorMsg(`UserName not defined!`, [], 500);
+        return;
+      }
 
-        if (this.repository.registerUser(this.user)) {
-          const response: SystemMessage = {
-            type: "SYSTEM",
-            payload: `Welcome ${this.user.userName}! You are now in the lobby!`,
-            timestamp: Date.now(),
-            sender: "SYSTEM",
-            to: [this.user.userName],
-          };
-          this.user.socket.write(ProtocolParser.serialize(response));
-        } else {
-          const response: ErrorMessage = {
-            type: "ERROR",
-            payload: `Registration failed, try again later.`,
-            timestamp: Date.now(),
-            sender: "SYSTEM",
-            to: [this.user.userName],
-            code: 500,
-          };
-          this.user.socket.write(ProtocolParser.serialize(response));
-        }
+      if (!token) {
+        this.errorMsg(`Token not defined!`, [], 500);
+        return;
+      }
+
+      const userExists: User | undefined =
+        this.repository.getUserByName(userName);
+      if (userExists !== undefined) {
+        this.systemMsg(
+          `User by the name of ${userExists.userName} already exists, pick another name!`,
+          [this.user.userName],
+          401,
+        );
+        return;
+      }
+
+      this.user.userName = userName;
+      this.user.token = token;
+
+      if (this.repository.registerUser(this.user)) {
+        this.systemMsg(
+          `Welcome ${this.user.userName}! You are now in the lobby!`,
+          [this.user.userName],
+          200,
+        );
+        this.systemMsg(
+          `Pick a room from the list: [${this.roomList()}]`,
+          [this.user.userName],
+          200,
+        );
+        this.systemMsg(`Or create your own!`, [this.user.userName], 200);
+      } else {
+        this.errorMsg(
+          `Registration failed, try again later.`,
+          [this.user.userName],
+          500,
+        );
       }
     } catch (error) {
       //write error msg
-      this.user?.socket.write(
+      this.user.socket.write(
         `Payload: ${msg.payload} is not valid JSON! Please send your registration as { "firstName": "value", "token": "value" }`,
       );
     }
+  }
 
-    // const user: User = {
-    //    userName: "";
-    //     token: "";
-    //     socket: this.s;
-    //     chatRooms: ChatRoomName[];
-    // }
-    // this.repository.registerUser(msg);
+  public handleDisconnect() {
+    this.repository.removeUser(this.user?.socket);
+  }
+
+  private systemMsg(payloadMsg: string, to: UserName[], code: number) {
+    const response: SystemMessage = {
+      type: "SYSTEM",
+      payload: payloadMsg,
+      timestamp: Date.now(),
+      sender: "SYSTEM",
+      to: to,
+      code: code,
+    };
+    this.user?.socket.write(ProtocolParser.serialize(response));
+  }
+
+  private errorMsg(payloadMsg: string, to: UserName[], codeNumber: number) {
+    const response: ErrorMessage = {
+      type: "ERROR",
+      payload: payloadMsg,
+      timestamp: Date.now(),
+      sender: "SYSTEM",
+      code: codeNumber,
+      to: to,
+    };
+    this.user?.socket.write(ProtocolParser.serialize(response));
+  }
+
+  private roomList(): string {
+    let avaiableRooms: string[] = [];
+
+    for (let [roomName, _] of this.repository.getRooms()) {
+      avaiableRooms.push(roomName);
+    }
+
+    return avaiableRooms.join(`, `);
   }
 }
