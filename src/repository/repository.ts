@@ -55,4 +55,20 @@ export class Repository {
   getRoom(roomName: string): ChatRoom | undefined {
     return this.rooms.get(roomName);
   }
+
+  getRooms(): Map<string, ChatRoom> {
+    return this.rooms;
+  }
+
+  removeUser(s: Socket) {
+    const user = this.activeConnections.get(s);
+    if (!user) return;
+
+    (this, this.activeConnections.delete(s));
+    for (const [_, room] of this.rooms) {
+      if (room.users.has(user.userName)) {
+        room.users.delete(user.userName);
+      }
+    }
+  }
 }
