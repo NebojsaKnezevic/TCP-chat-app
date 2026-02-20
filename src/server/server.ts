@@ -1,8 +1,6 @@
 import { createServer, Socket } from "net";
-import { ProtocolParser } from "../services/parser.js";
-import type { AuthMessage, Message } from "../models/protocol.js";
 import { Repository } from "../repository/repository.js";
-import { ServerService } from "../services/server-service.js";
+import { ServerService } from "../services/server/server-service.js";
 
 const server = createServer();
 
