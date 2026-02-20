@@ -99,17 +99,17 @@ Now that we have network part ready, we have to discuss application logic. We ne
 3. **Application entities** - there are 2 entities chat room and user that are in n:n relationship:
 
 - **3.1 Chat rooms** are different realms in the application. User can freely move across different rooms(provided they meet specific criteria), exchange ChatMessages, or create his own chatrooms.
-  - **3.1.1** - Choosing the chat room is done by command `/join-room name`, the server then either gets that user in or requests a key if the room is locked. If all requirements are meet, user officially joins the room and system announces it.
-  - **3.1.2** - Creating the room is done with command `/create-room name`, user will automatically become room admin giving him access to all sorts of other commands, more on that later...
+  - **3.1.1** - Choosing the chat room is done by command `/join-room name key`, the server then either gets that user in or requests a key if the room is locked. If all requirements are meet, user officially joins the room and system announces it.
+  - **3.1.2** - Creating the room is done with command `/create-room name key`, user will automatically become room admin giving him access to all sorts of other commands, more on that later... Key param is optional, ommiting key will result of creation of publich room.
 
-- **3.2 User** is inhabitant of the afformentioned chat rooms. One user can be a member of multiple rooms. He can switch rooms in his current window using command `/join-room name` or by opening new CLI tab and logging with correct credentials.
+- **3.2 User** is inhabitant of the afformentioned chat rooms. One user can be a member of multiple rooms. He can switch rooms in his current window using command `/join-room name key` or by opening new CLI tab and logging with correct credentials.
 
 ### COMMANDS
 
 Commands are instructed from CLI as a **ChatMessage** starting with `/` followed by an action such as `join-room` and then value `name`. For example: `/join-room KacRoom`.
 
-| Command               | Description                                                                                      | Example                 |
-| :-------------------- | :----------------------------------------------------------------------------------------------- | :---------------------- |
-| **`/AUTH user pass`** | **Authenticates the user. This is a mandatory first step to unlock chat and room features.**     | `/AUTH john_doe 1234`   |
-| `/join-room name`     | Requests to join an existing chat room. If the room is locked, the server will prompt for a key. | `/join-room Lobby`      |
-| `/create-room name`   | Creates a new chat room and automatically assigns the sender as the **Admin**.                   | `/create-room DevSpace` |
+| Command                 | Description                                                                                                                                          | Example                 |
+| :---------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------- |
+| **`/AUTH user pass`**   | **Authenticates the user. This is a mandatory first step to unlock chat and room features.**                                                         | `/AUTH john_doe 1234`   |
+| `/join-room name key`   | Requests to join an existing chat room. If the room is locked, the server will prompt for a key.                                                     | `/join-room Lobby`      |
+| `/create-room name key` | Creates a new chat room and automatically assigns the sender as the **Admin**. Key is optional, ommiting one will result in creation of public room. | `/create-room DevSpace` |

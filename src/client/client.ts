@@ -2,7 +2,7 @@ process.removeAllListeners("warning");
 process.env.NODE_NO_WARNINGS = "1";
 
 import { createConnection } from "net";
-import { ClientService } from "../services/client-service.js";
+import { ClientService } from "../services/client/client-service.js";
 
 const client = createConnection({ port: 3099 });
 client.setEncoding("utf-8");

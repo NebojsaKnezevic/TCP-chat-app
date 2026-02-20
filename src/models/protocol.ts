@@ -6,7 +6,7 @@ export interface Message {
   payload: string;
   timestamp: number;
   sender: UserName;
-  to: UserName[];
+  // to: UserName[];
   code?: number;
 }
 
@@ -26,4 +26,8 @@ export interface SystemMessage extends Message {
 
 export interface ErrorMessage extends Message {
   type: "ERROR";
+}
+
+export interface CommandMessage extends Message {
+  type: "COMMAND";
 }

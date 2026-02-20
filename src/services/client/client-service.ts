@@ -1,7 +1,7 @@
 import type { Socket } from "net";
 import * as readline from "node:readline/promises";
-import type { Message, MessageType } from "../models/protocol.js";
-import { ProtocolParser } from "./parser.js";
+import type { Message, MessageType } from "../../models/protocol.js";
+import { ProtocolParser } from "../parser.js";
 
 export class ClientService {
   private socket: Socket;
@@ -33,7 +33,7 @@ export class ClientService {
       payload: `/AUTH ${this.userName} ${this.token}`,
       timestamp: Number(new Date()),
       sender: this.userName,
-      to: [""],
+      // to: [""],
     };
 
     this.socket.write(ProtocolParser.serialize(msg));
@@ -53,7 +53,7 @@ export class ClientService {
         payload: line,
         timestamp: Date.now(),
         sender: this.userName,
-        to: [],
+        // to: [],
       };
 
       this.socket.write(ProtocolParser.serialize(msg));
@@ -64,7 +64,7 @@ export class ClientService {
   private onData() {
     this.socket.on("data", async (data) => {
       this.accumulationBuffer += data.toString();
-      //   console.log("accumulationBuffer: ", this.accumulationBuffer);
+      // console.log("accumulationBuffer: ", this.accumulationBuffer);
 
       const { complete, incomplete } = ProtocolParser.splitFrames(
         this.accumulationBuffer,
@@ -95,8 +95,8 @@ export class ClientService {
   }
 
   async run() {
-    setTimeout(async () => await this.auth(), 1000);
     this.onData();
+    setTimeout(async () => await this.auth(), 1000);
     await this.chat();
   }
 }
