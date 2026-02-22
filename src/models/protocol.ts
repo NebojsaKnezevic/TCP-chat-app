@@ -6,7 +6,6 @@ export interface Message {
   payload: string;
   timestamp: number;
   sender: UserName;
-  // to: UserName[];
   code?: number;
 }
 

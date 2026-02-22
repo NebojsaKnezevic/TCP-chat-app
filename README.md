@@ -54,14 +54,15 @@ This transformation ensures that complex data structures can survive the trip ac
 Here is our custom JSON based protocol, you can find it in models/protocol.ts
 
 ```typescript
-type MessageType = "AUTH" | "CHAT" | "ERROR" | "SYSTEM";
+import type { UserName } from "./user.js";
+export type MessageType = "AUTH" | "CHAT" | "ERROR" | "SYSTEM" | "COMMAND";
 
-interface Message {
+export interface Message {
   type: MessageType;
   payload: string;
   timestamp: number;
   sender: UserName;
-  to?: UserName[];
+  code?: number;
 }
 
 export interface AuthMessage extends Message {
@@ -79,7 +80,10 @@ export interface SystemMessage extends Message {
 
 export interface ErrorMessage extends Message {
   type: "ERROR";
-  code: number;
+}
+
+export interface CommandMessage extends Message {
+  type: "COMMAND";
 }
 ```
 
@@ -106,10 +110,20 @@ Now that we have network part ready, we have to discuss application logic. We ne
 
 ### COMMANDS
 
-Commands are instructed from CLI as a **ChatMessage** starting with `/` followed by an action such as `join-room` and then value `name`. For example: `/join-room KacRoom`.
+Commands are initiated from the CLI as a **ChatMessage** starting with a `/` prefix, followed by the action and any necessary arguments.
 
-| Command                 | Description                                                                                                                                          | Example                 |
-| :---------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------- |
-| **`/AUTH user pass`**   | **Authenticates the user. This is a mandatory first step to unlock chat and room features.**                                                         | `/AUTH john_doe 1234`   |
-| `/join-room name key`   | Requests to join an existing chat room. If the room is locked, the server will prompt for a key.                                                     | `/join-room Lobby`      |
-| `/create-room name key` | Creates a new chat room and automatically assigns the sender as the **Admin**. Key is optional, ommiting one will result in creation of public room. | `/create-room DevSpace` |
+| Command                 | Description                                                                                                            | Example                 |
+| :---------------------- | :--------------------------------------------------------------------------------------------------------------------- | :---------------------- |
+| **`/AUTH user pass`**   | **Mandatory first step.** Authenticates the user. Access to chat and room features is locked until this is successful. | `/AUTH john_doe 1234`   |
+| `/create-room name key` | Creates a new chat room. You are automatically assigned as the **Admin**. If `key` is omitted, the room is public.     | `/create-room DevSpace` |
+| `/join-room name key`   | Requests to join an existing room. If the room is private (locked), the `key` must be provided.                        | `/join-room Lobby 123`  |
+| `/list-room`            | Returns a list of all currently active rooms on the server.                                                            | `/list-room`            |
+| `/my-room`              | Displays information about the room you are currently in, including the member list.                                   | `/my-room`              |
+
+---
+
+### Room Privacy & Access
+
+- **Public Rooms:** Created without a key. Anyone can join using `/join-room name`.
+- **Private Rooms:** Created with a key. Joining requires the correct `/join-room name key` combination.
+- **Admin Rights:** The user who creates the room has administrative privileges (e.g., managing the room).
