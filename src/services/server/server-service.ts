@@ -3,6 +3,7 @@ import type { User, UserName } from "../../models/user.js";
 import { Repository } from "../../repository/repository.js";
 import type {
   AuthMessage,
+  ChatMessage,
   CommandMessage,
   ErrorMessage,
   Message,
@@ -87,7 +88,8 @@ export class ServerService {
   private router(msg: Message) {
     switch (msg.type) {
       case "CHAT":
-        console.log("CHAT message routed!");
+        console.log("CHAT message routed!", msg.payload);
+        this.handleChatMessage(msg as ChatMessage);
         break;
       case "AUTH":
         console.log("AUTH message routed!");
@@ -101,6 +103,19 @@ export class ServerService {
       default:
         console.log("Unknown message type!");
     }
+  }
+
+  private handleChatMessage(msg: ChatMessage) {
+    const roomName: ChatRoomName = this.user.chatRooms[0];
+    const room: ChatRoom | undefined = this.repository.getRoom(roomName);
+    let roomMembers: UserName[] = [];
+    if (room) {
+      roomMembers = [...room.users.values()]
+        .filter((u) => u.userName !== this.user.userName)
+        .map((u) => u.userName);
+    }
+
+    this.msg(msg, roomMembers, roomName);
   }
 
   public handleDisconnect() {
